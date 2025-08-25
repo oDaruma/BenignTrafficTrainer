@@ -36,26 +36,6 @@ Model performance depends heavily on hyperparameters (learning rate, max depth, 
 - Continuous hyperparameters (learning rate, τ, class weights): Bayesian Optimisation.  
 - This hybrid ensures we explore model families broadly while fine-tuning numeric parameters efficiently.
 
-
-### Hyperparameter Optimisation: Decision Matrix
-
-| Method              | When To Use                                        | Benefits                                                   | Drawbacks                                                    | Typical Use In Our IDS |
-|---------------------|-----------------------------------------------------|------------------------------------------------------------|--------------------------------------------------------------|------------------------|
-| Grid Search         | Small, discrete spaces; few parameters (<= 4)       | Simple, exhaustive on a small grid; reproducible           | Scales poorly; wastes trials on unimportant dimensions       | Sweep categorical choices (e.g., model family, penalty) |
-| Random Search       | Medium/large spaces; quick baseline                 | Covers wide spaces fast; good early wins                   | Noisy; may miss narrow optima; less sample efficient         | Coarse pass before BO for RF/GB params                   |
-| Bayesian Optimisation (BO) | Expensive models/metrics; continuous params; limited budget | Sample efficient; focuses on promising regions; handles noise | More complex; needs surrogate choice; some overhead          | Main tuner for LR/SGD/GB continuous params, threshold tau |
-
-## Notes
-- Categorical hyperparameters (e.g., model type, penalty, sampling strategy) are best handled by **Grid Search** or a small manual list.
-- Continuous hyperparameters (e.g., learning_rate, C, alpha, max_depth, num_leaves, tau) are best tuned with **Bayesian Optimisation**.
-- A practical hybrid: **Grid over categorical** x **BO over continuous**.
-- Keep total tunables in the range **2 to 8** to maintain a tractable search.
-
-## Recommended Workflow
-1. Fix categorical choices with a tiny grid (1–3 options each).
-2. Run BO on continuous parameters (budgeted iterations).
-3. Validate with cross-validation PR-AUC; finalize threshold tau on test set for target precision or max-F1.
-
 ---
 
 ## Number of Tunable Hyperparameters
@@ -82,3 +62,25 @@ This balances:
 - Efficiency (fewer evaluations needed)  
 - Robustness (safe exploration within FPR/latency constraints)  
 - Interpretability (clear record of best hyperparameters and trade-offs).
+
+---
+
+# Hyperparameter Optimisation: Decision Matrix
+
+| Method              | When To Use                                        | Benefits                                                   | Drawbacks                                                    | Typical Use In Our IDS |
+|---------------------|-----------------------------------------------------|------------------------------------------------------------|--------------------------------------------------------------|------------------------|
+| Grid Search         | Small, discrete spaces; few parameters (<= 4)       | Simple, exhaustive on a small grid; reproducible           | Scales poorly; wastes trials on unimportant dimensions       | Sweep categorical choices (e.g., model family, penalty) |
+| Random Search       | Medium/large spaces; quick baseline                 | Covers wide spaces fast; good early wins                   | Noisy; may miss narrow optima; less sample efficient         | Coarse pass before BO for RF/GB params                   |
+| Bayesian Optimisation (BO) | Expensive models/metrics; continuous params; limited budget | Sample efficient; focuses on promising regions; handles noise | More complex; needs surrogate choice; some overhead          | Main tuner for LR/SGD/GB continuous params, threshold tau |
+
+## Notes
+- Categorical hyperparameters (e.g., model type, penalty, sampling strategy) are best handled by **Grid Search** or a small manual list.
+- Continuous hyperparameters (e.g., learning_rate, C, alpha, max_depth, num_leaves, tau) are best tuned with **Bayesian Optimisation**.
+- A practical hybrid: **Grid over categorical** x **BO over continuous**.
+- Keep total tunables in the range **2 to 8** to maintain a tractable search.
+
+## Recommended Workflow
+1. Fix categorical choices with a tiny grid (1–3 options each).
+2. Run BO on continuous parameters (budgeted iterations).
+3. Validate with cross-validation PR-AUC; finalize threshold tau on test set for target precision or max-F1.
+
