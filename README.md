@@ -101,7 +101,7 @@ Train models to recognise benign network traffics accurately (high TNR/specifici
 
 - **Sigmoid:** maps any number to 0–1:  \( $\sigma(z)=1/(1+e^{-z})$ \).  
 - **Calibration:** learn a mapping \( $g(p)$ \) so calibrated probabilities match observed frequencies (Platt = logistic; Isotonic = monotone step-wise).  
-- **Confusion matrix:** TN/FP/FN/TP counts; **TNR** \(= $\text{TN}/(\text{TN}+\text{FP})$\) (benign passed), **TPR** \(= $\text{TP}/(\text{TP}+\text{FN})$\).  
+- **Confusion matrix:** TN/FP/FN/TP counts; **TNR** \(= $\text{TN}$/($\text{TN}+\text{FP}$)\) (benign passed), **TPR** \(= $\text{TP}$/($\text{TP}+\text{FN}$)\).  
 - **Percentiles:** p95 latency = time under which 95% of single-row predictions finish.  
 - **Bayesian Optimisation:** build a surrogate (GP with Matern-5/2 kernel) over hyper-params; pick next point by **Expected Improvement (EI)**; handle noise by modelling observation variance.  
 - **Feasible set:** we keep only configs with **TPR ≥ 0.90** and **latency ≤ 10 ms**; τ is chosen to satisfy **FPR cap**.  
