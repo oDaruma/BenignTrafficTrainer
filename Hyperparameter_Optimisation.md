@@ -20,7 +20,7 @@ Model performance depends heavily on hyperparameters (learning rate, max depth, 
 - Drawbacks: Noisy results; may miss optimal regions.  
 - Fit here: Good for quick exploration, but less sample-efficient than Bayesian Optimisation.  
 
-### 3. Bayesian Optimisation (BO) (preferred in Benign_Trainer_3.ipynb)
+### 3. Bayesian Optimisation (BO) (preferred in Benign_Trainer.ipynb)
 - How it works: Uses a surrogate model (Gaussian Process with Matern kernel) to model the performance surface. Iteratively selects promising hyperparameters via Expected Improvement (EI).  
 - Benefits:  
   - Sample-efficient, requires fewer evaluations.  
