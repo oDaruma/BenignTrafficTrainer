@@ -1,110 +1,121 @@
-# Reflection: Optimising Network Intrusion Detection — **Benign-First Training for Non-Benign Identification**
+# Reflection: Applying Bayesian Optimisation (BO) to Network Intrusion Detection — **Benign-First Training for Non-Benign Identification**
 
 ## Executive summary (non-technical)
 
-- **Goal.** Train detectors to **model benign traffic precisely** (high TNR) so we can **flag non-benign** when the predicted benign probability falls below a threshold τ. We **must** still maintain high attack detection (TPR ≥ 90%) and ensure low CPU latency. Corpora: **UNSW-NB15** (`Payload_data_UNSW.csv`) with flow stats and payload histograms.  
-- **Why multiple optimisation methods.** Hyper-parameters, calibration, sampling ratios and τ are expensive to tune. We therefore used a **progression of methods**:  
-  - **Grid Search** for small/logistic models.  
-  - **Random Search** for tree ensembles.  
-  - **Successive Halving** for large search spaces with early stopping.  
-  - **Bayesian Optimisation** (optional, via `skopt`) for sample-efficient exploration.  
-- **Outcome.** A CPU-deployable detector that **passes benign** reliably (minimises false alerts) and **signals non-benign** with high recall. We save the **trained pipeline**, **scaler**, **label encoder**, **metadata**, and **trials logs** for SOC deployment.
+* **Goal.** Learn a precise model of **benign** traffic (high **TNR**) and flag **non-benign** when the benign probability falls below a decision threshold **τ**. The detector **must** meet **TPR ≥ 0.90**, **FPR ≤ 0.005**, and **p95 CPU latency ≤ 10 ms**. Primary corpus: **UNSW-NB15** (`archive/Payload_data_UNSW.csv`) with optional cross-dataset checks on **CIC-IDS2017**. [1]–[3]
+* **Why BO.** BO **must** tune hyperparameters and the operating threshold **τ** under **noisy, expensive** evaluation while honouring **hard constraints** (TPR/FPR/latency). The notebook uses a **Gaussian Process surrogate with Noisy Expected Improvement** and a **barrier objective** for constraints. [4]–[6]
+* **Outcome.** A probability-calibrated, CPU-deployable detector that **passes benign** reliably (low false alerts) and **signals non-benign** at bounded **FPR** and **p95 latency**. All artefacts, trials, and **hyperparameter audit logs** are persisted to `ids_artifacts/` for SOC ingestion and reproducibility.
 
 ---
 
-## 1) How optimisation skills/code transfer (technical)
+## 1) How the BO skills/code transfer (technical)
 
 ### A. Direct applications (benign-first modelling)
 
-| Optimisation skill | IDS use-case | **Target & constraints** | Implemented in notebook |
-| --- | --- | --- | --- |
-| **Grid Search** | Logistic Regression tuning | Objective: maximise AP (PR-AUC); constraints implicit via CV | ✅ |
-| **Random Search** | Random Forest depth/leaf tuning | Broad coverage without exploding compute | ✅ |
-| **Successive Halving** | SGD/linear models | Early stop bad configs; efficient on large data | ✅ |
-| **Bayesian Opt** (if installed) | Gradient Boosting | Objective: maximise AP, constraint-aware search | ✅ |
-| **Threshold optimisation** | τ selection post-fit | Pick τ for max-F1 or target precision | ✅ |
-| **Calibration** | Reliable probabilities | Platt scaling (sigmoid); fallback isotonic | ✅ |
+| BO skill                       | IDS use-case                                                    | **Optimisation target & constraints**                                                                                        | Implemented in notebook |
+| ------------------------------ | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| **GP surrogate + NoisyEI**     | Sample-efficient tuning of **LightGBM** hyperparameters **+ τ** | Objective: **maximise TNR**. Constraints: **TPR ≥ 0.90**, **FPR ≤ 0.005**, **p95 latency ≤ 10 ms** via **barrier objective** | ✅                       |
+| **Constraint handling**        | Keep search “safe”                                              | **Must** reject/penalise infeasible configs; select **best feasible**                                                        | ✅                       |
+| **Calibration before τ**       | Reliable scoring                                                | **Must** calibrate with **Isotonic CV** prior to τ optimisation                                                              | ✅                       |
+| **Threshold (τ) optimisation** | Operating point                                                 | Constrained τ sweep to satisfy TPR/FPR; among feasible, **maximise TNR**                                                     | ✅                       |
+| **Auditability**               | Governance                                                      | **Must** validate `HPO_SPACES` against estimator `.get_params()`; **must** log effective hyperparameters to JSONL            | ✅                       |
 
-**Why benign-first?** In production SIEM/SOAR, benign dominates. If the model **knows benign well**, anything deviating is flagged as suspicious. We enforce a TPR floor to avoid missing true attacks.
+**Why benign-first?** Production traffic is predominantly benign. Tight benign modelling yields **low FPR / high TNR**, reducing alert fatigue; a **TPR floor** safeguards detection coverage.
 
 ### B. What is optimised
 
-- **Features.** Full UNSW flow statistics and payload histograms, plus categorical protocol/service features.  
-- **Models.** Baselines (LogReg, SGD), Random Forest, Gradient Boosting.  
-- **Objective/constraints.** Maximise **PR-AUC**; evaluate TPR/TNR at chosen thresholds.  
-- **Explainability.** Pipeline ready for SHAP/local feature importance (future extension).  
+* **Features.** Flow and payload-derived features via a **ColumnTransformer** (scaled numerics + OHE categoricals). CICFlowMeter may be used for flow extraction in CIC-IDS2017 contexts. [3], [8]
+* **Models.** Logistic Regression / SGD (baselines), **LightGBM** (primary); CatBoost optional; 1D-CNN optional for payloads.
+* **Objective/constraints.** **Maximise TNR** at τ **subject to** TPR/FPR/latency; also report PR-AUC, ROC-AUC, F1.
 
 ---
 
 ## 2) Questions addressed
 
-- **Which optimiser suits which model?** Grid for small LR, Random for forests, Halving for SGD, Bayesian for boosting.  
-- **What benign pass-rate (TNR) is achievable while maintaining TPR ≥ 0.90?**  
-- **Do flow/payload histogram features improve discrimination under optimised τ?**  
-- **How stable are thresholds/calibrations across folds?**  
+* **Benign pass-rate at fixed safety.** Which configurations achieve **highest TNR** under **TPR ≥ 0.90**, **FPR ≤ 0.005**, **p95 ≤ 10 ms**?
+* **Effect of calibration/τ.** How much do **Isotonic calibration** and **constrained τ selection** reduce FPR at stable TPR?
+* **Governance.** Can we **validate** HPO spaces and **audit** the exact hyperparameters used per training run?
 
 ---
 
-## 3) Dataset
+## 3) Datasets
 
-- **Primary:** `archive/Payload_data_UNSW.csv` (UNSW-NB15) with flow stats and payload histograms.  
-- **Target column:** `label` → renamed to **`target`** (encoded 0 = Normal, 1 = Attack).  
-- **Splitting:** stratified train/test split with cross-validation.  
+* **Primary:** **UNSW-NB15** (`archive/Payload_data_UNSW.csv`). [2]
+* **Extension (may):** **CIC-IDS2017** for cross-dataset transfer. [1], [3], [9]
+* **Labelling:** `normal` + `generic` → **benign (0)**; all other labels → **malicious (1)**.
+* **Splitting:** stratified **train/validation/test**; **Isotonic CV** for calibration; final refit on train+val, report on test.
+* **Tooling:** CICFlowMeter for flow features when processing CIC PCAPs. [8]
 
 ---
 
 ## 4) Alignment
 
-- **SOC/DFIR (must).** High TNR reduces benign alert noise; TPR floor reduces missed attacks.  
-- **MLOps (should).** Multiple optimisers compared, unified evaluation metrics, trials logged to Parquet.  
-- **Deployment (must).** CPU latency bounds, model/scaler/encoder/metadata saved to `ids_artifacts/`.  
+* **SOC/DFIR (must).** High **TNR** reduces benign alert noise; **TPR floor** prevents coverage loss.
+* **MLOps (must).** Deterministic artefacts, **model card**, **trials log**, **hyperparameter audit JSONL**, and **fail-fast space validation**.
+* **Deployment (must).** Latency bounded on CPU; artefacts written to `ids_artifacts/`.
+
+**Key artefacts**
+
+| Artefact                                  | Path                                                                   |
+| ----------------------------------------- | ---------------------------------------------------------------------- |
+| Calibrated model                          | `ids_artifacts/model.pkl`                                              |
+| Preprocessor / scaler (ColumnTransformer) | `ids_artifacts/scaler.pkl`                                             |
+| Label encoder (if used)                   | `ids_artifacts/label_encoder.pkl`                                      |
+| Metadata (incl. τ and metrics)            | `ids_artifacts/metadata.json`                                          |
+| Trials log (BO/HPO)                       | `ids_artifacts/trials.parquet` *(CSV fallback if Parquet unavailable)* |
+| Hyperparameter audit log (JSONL)          | `ids_artifacts/audit_hyperparams.jsonl`                                |
+| Model card                                | `ids_artifacts/model_card.json`                                        |
 
 ---
 
-## Project blueprint (implemented)
+## Proposed project blueprint (updated)
 
-1. **Problem framing & KPIs.** Objective: maximise **PR-AUC**, report **TNR/TPR/F1** at chosen τ.  
-2. **Data engineering.** Load UNSW CSV; retain flow/payload features; impute/scaling/encoding via `ColumnTransformer`.  
-3. **Model space.** Logistic Regression, SGD, Random Forest, Gradient Boosting.  
-4. **Optimisation.**  
-   - Grid Search (LR)  
-   - Random Search (RF)  
-   - Successive Halving (SGD)  
-   - Bayesian (GBC, optional)  
-5. **Imbalance handling.** Class weights & stratified splits.  
-6. **Calibration & τ.** Platt vs Isotonic; τ by max-F1 or target precision.  
-7. **Results comparison.** Table (AP, TPR, TNR, F1); PR curves.  
-8. **Artifacts.** Save model/scaler/encoder/metadata/trials to `ids_artifacts/`.  
+1. **Problem framing & KPIs (must).** **Objective:** maximise **TNR**. **Constraints:** **TPR ≥ 0.90**, **FPR ≤ 0.005**, **p95 ≤ 10 ms**; secondary: macro-F1, PR-AUC, ROC-AUC.
+2. **Data engineering (must).** Load UNSW CSV; feature engineering; ColumnTransformer (scale + OHE). Optionally process CIC PCAPs with CICFlowMeter. [1], [3], [8]
+3. **Model space (should).** LR, SGD, **LightGBM** primary; CatBoost/1D-CNN optional.
+4. **HPO schemes (should).** Grid (compact baselines), Random (wider spaces), **BO** (LightGBM + τ). [4], [5]
+5. **BO setup (must).** **GP (Matern-5/2)** surrogate, **NoisyEI** acquisition; **barrier objective** for TPR/FPR/latency; **best feasible** selection; **trials logged** to `TRIALS_PATH`. [4]–[6]
+6. **Calibration & τ (must).** **Isotonic** calibration; constrained τ sweep to meet TPR/FPR; choose τ maximising TNR among feasible thresholds.
+7. **Evaluation & diagnostics (should).** ROC/PR, calibration curve, confusion matrices at τ, threshold sweeps, **p95 latency**, feature importances.
+8. **Audit & governance (must).**
+
+   * **Validation cell:** `validate_hpo_spaces(HPO_SPACES)` checks keys match estimator parameters and `set_params` succeeds.
+   * **Audit logger:** `log_effective_hyperparams(...)` prints and appends **effective hyperparameters** (BASE/HPO/BO context, τ, seed, CV, constraints) to JSONL.
+9. **Export (must).** Save model, scaler, encoder, metadata, trials, audit to `ids_artifacts/`.
 
 ---
 
-## Kernel-crash avoidance & reliability controls
+## Reliability & performance controls
 
-- **Row cap option** for very large datasets.  
-- **Downcast dtypes, drop constants.**  
-- **Thread limits** on BLAS/OpenMP.  
-- **Safe plotting** with `plt.close()`.  
-- **Checkpoint CV results** to `trials.parquet`.  
-- **Skip Bayesian if `skopt` missing.**  
+* **Fail-fast HPO configuration.** Validation **must** pass before running HPO/BO.
+* **Latency benchmarking.** **p95** per-sample latency measured on validation subsets; enforced in BO constraints.
+* **Resource safety.** Optional row capping, dtype down-casting, thread limits, closed figures after plotting.
+* **Resilient logging.** Trials saved to Parquet (CSV fallback) and **JSONL audit** for each fitted run.
 
 ---
 
 ## Explanation (plain language)
 
-*We train a computer to learn what “normal internet traffic” looks like. If a new connection doesn’t fit that pattern, we flag it as “non-benign.”*
-
-1. We try different models and parameters.  
-2. We use different search strategies (grid, random, halving, Bayesian) to find the best ones efficiently.  
-3. We **calibrate** the model so probability scores are meaningful.  
-4. We choose a **threshold τ** that keeps false alarms low but still catches >90% of attacks.  
-5. We save everything (model, scaler, encoder, metadata, trials) for deployment in the SOC.  
+We first ensure the model’s probability scores are **well calibrated**, then find a **threshold τ** that keeps **false alarms** low while still catching **≥ 90%** of attacks and staying fast on CPU. **Bayesian Optimisation** chooses hyperparameters (and τ) **efficiently**, focusing compute on promising regions while **respecting constraints**. We persist a **model card**, artefacts, trials, and an **audit log** so operations can reproduce and govern the detector.
 
 ---
 
 ## Mathematical/statistical notes (used in code)
 
-- **Precision/Recall/F1/AP** as before.  
-- **Sigmoid** \(σ(z)=1/(1+e^{-z})\) for logistic models & calibration.  
-- **Calibration**: Platt = logistic fit, Isotonic = step-wise non-parametric.  
-- **PR-AUC**: area under Precision–Recall curve, robust under imbalance.  
-- **Threshold search**: τ chosen to maximise F1 or hit target precision.  
+* **Calibration:** Isotonic regression on CV folds.
+* **Operating metrics at τ:** **TPR**, **FPR**, **TNR**; plus PR-AUC, ROC-AUC, F1.
+* **Constrained τ selection:** τ ∈ \[0,1] sweep; **feasible** if TPR ≥ 0.90 and FPR ≤ 0.005; among feasible, **maximise TNR**.
+* **Bayesian Optimisation:** Gaussian Process surrogate with **Matern-5/2** kernel; **Noisy Expected Improvement** acquisition. [4], [5]
+* **Constraint handling in BO:** **Barrier objective** assigns very large loss to infeasible points; among feasible, optimiser minimises $-\mathrm{TNR}$. [6], [7]
+
+---
+
+[1]: https://www.kaggle.com/datasets/yasiralifarrukh/unsw-and-cicids2017-labelled-pcap-data/code?utm_source=chatgpt.com
+[2]: https://research.unsw.edu.au/projects/unsw-nb15-dataset?utm_source=chatgpt.com
+[3]: https://www.unb.ca/cic/datasets/ids-2017.html?utm_source=chatgpt.com
+[4]: https://proceedings.neurips.cc/paper/2012/file/05311655a15b75fab86956663e1819cd-Paper.pdf?utm_source=chatgpt.com
+[5]: https://arxiv.org/pdf/1807.02811?utm_source=chatgpt.com
+[6]: https://pmc.ncbi.nlm.nih.gov/articles/PMC10485113/?utm_source=chatgpt.com
+[7]: https://arxiv.org/abs/2403.12948?utm_source=chatgpt.com
+[8]: https://github.com/ahlashkari/CICFlowMeter?utm_source=chatgpt.com
+[9]: https://zenodo.org/records/7258579?utm_source=chatgpt.com
