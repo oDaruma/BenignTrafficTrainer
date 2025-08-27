@@ -29,5 +29,5 @@ Artifacts to consult:
 - `staging/manual_grid/` — grid search history.
 - `staging/cnn_best.keras` — best CNN weights (if used).
 
-## (Contact)
+## Profile
 https://www.linkedin.com/in/maxchowhk
