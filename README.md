@@ -20,8 +20,8 @@ This project trains a machine‑learning model to spot suspicious network activi
 
 ## Results
 After running the notebook, insert your metrics:
-- **AUPRC (test):** …
-- **F1@τ (test):** … (τ = …)
+- **AUPRC (test):** 0.9997634333419292
+- **F1@τ (test):** 0.9997028988582828 (τ = 0.05)
 - **Precision@τ / Recall@τ / TNR@τ:** … / … / …
 
 Artifacts to consult:
