@@ -19,7 +19,7 @@ This project trains a machine‑learning model to spot suspicious network activi
 - Global concurrency via `N_THREADS`; models set `n_jobs=-1` when supported.
 
 ## Results
-After running the notebook, insert your metrics:
+
 - **AUPRC (test):** 0.9997634333419292
 - **F1@τ (test):** 0.9997028988582828 (τ = 0.05)
 - **Precision@τ / Recall@τ / TNR@τ:** … / … / …
@@ -29,8 +29,5 @@ Artifacts to consult:
 - `staging/manual_grid/` — grid search history.
 - `staging/cnn_best.keras` — best CNN weights (if used).
 
-You can include images of plots:
-![Screenshot](image.png)
-
-## (Optional: Contact)
+## (Contact)
 https://www.linkedin.com/in/maxchowhk
