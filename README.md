@@ -4,7 +4,7 @@
 This project trains a machine‑learning model to spot suspicious network activity (like lateral movement or zero‑day‑style behavior) from flow/payload statistics. We feed past examples of **benign** vs **attack** traffic to the model so it can learn patterns, then set a **decision threshold (τ)** that balances catching more true attacks with keeping false alarms low for SOC analysts.
 
 ## Data
-- Original dateset obtained from UNSW-NB15 and CIC-IDS2017 Labelled PCAP Data (https://www.kaggle.com/datasets/yasiralifarrukh/unsw-and-cicids2017-labelled-pcap-data/code/data)
+- Original dateset obtained from `UNSW-NB15 and CIC-IDS2017 Labelled PCAP Data` (https://www.kaggle.com/datasets/yasiralifarrukh/unsw-and-cicids2017-labelled-pcap-data/code/data)
 - Source file expected at: `archive/Payload_data_UNSW.csv` (tabular flow/payload features with binary labels).
 - Features are aggregated statistics per flow/session; no raw packet contents or personal identifiers are included.
 - Train/validation/test splits are **stratified** to preserve class balance. Intermediate splits and artifacts are stored under `staging/` for reproducibility.
