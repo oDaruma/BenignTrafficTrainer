@@ -33,4 +33,4 @@ You can include images of plots:
 ![Screenshot](image.png)
 
 ## (Optional: Contact)
-Add email or LinkedIn if you plan to publish this repo.
+https://www.linkedin.com/in/maxchowhk
