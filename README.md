@@ -1,7 +1,9 @@
 # Label_Trainer — Intrusion Detection Model Pipeline
 
 ## Non‑technical explanation
-This project trains a machine‑learning model to spot suspicious network activity (like lateral movement or zero‑day‑style behavior) from flow/payload statistics. We feed past examples of **benign** vs **attack** traffic to the model so it can learn patterns, then set a **decision threshold (τ)** that balances catching more true attacks with keeping false alarms low for SOC analysts.
+This project trains a machine‑learning model to spot suspicious network activity (like lateral movement or zero‑day‑style behavior) from flow/payload statistics. We feed past examples of **benign** vs **attack** traffic to the model so it can learn patterns, then set a **decision threshold (τ)** that balances catching more true attacks with keeping false alarms low.
+
+Our model will be extended to an IDS system that identifies unknown cyber threats in network data, to detect suspicious activity on a computer network. It analyses patterns in the UNSW-NB15 dataset, distinguishing between normal (benign) traffic and attacks. By using Bayesian Optimization, we fine-tuned a LightGBM model to achieve high accuracy (PR-AUC: ~0.95), detecting most attacks while minimizing false alerts. A neural network (CNN) was also tested, but it performed slightly worse. The model’s results, visualized through charts, help security teams prioritize real threats, enhancing network safety with reliable, automated detection.
 
 ## Data
 - Original dateset obtained from `UNSW-NB15 and CIC-IDS2017 Labelled PCAP Data` (https://www.kaggle.com/datasets/yasiralifarrukh/unsw-and-cicids2017-labelled-pcap-data/code/data)
