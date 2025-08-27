@@ -11,7 +11,7 @@ This project trains a machine‑learning model to spot suspicious network activi
 ## Model
 - **Primary:** LightGBM classifier (gradient‑boosted trees) chosen for strong tabular performance, speed, and native handling of non‑linear interactions.
 - **Secondary (optional):** CNN baseline for derived representations.
-- **Decision rule:** predict attack when \( \hat p \ge \tau \); **τ** is chosen to **maximize F1** on the validation set.
+- **Decision rule:** predict attack when \( $\hat p \ge \tau$ \); **τ** is chosen to **maximize F1** on the validation set.
 
 ## Hyperparameter optimisation
 - **Manual grid (parallel):** Exploratory search with `joblib.Parallel` (multi‑threaded).
