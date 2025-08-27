@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-08-27T14:06:53.484483+00:00Z",
+  "stage": "manual_grid",
+  "model_name": "LightGBM",
+  "dataset": "archive/Payload_data_UNSW.csv",
+  "seed": 42,
+  "metrics": {
+    "auprc": 0.9997634333419292,
+    "f1": 0.9997028988582828,
+    "tau": 0.05
+  },
+  "params": {
+    "num_leaves": 31,
+    "learning_rate": 0.05
+  }
+}
