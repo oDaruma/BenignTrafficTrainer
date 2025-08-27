@@ -1,24 +1,36 @@
-# PROJECT TITLE 
+# Label_Trainer — Intrusion Detection Model Pipeline
 
+## Non‑technical explanation
+This project trains a machine‑learning model to spot suspicious network activity (like lateral movement or zero‑day‑style behavior) from flow/payload statistics. We feed past examples of **benign** vs **attack** traffic to the model so it can learn patterns, then set a **decision threshold (τ)** that balances catching more true attacks with keeping false alarms low for SOC analysts.
 
-## NON-TECHNICAL EXPLANATION OF YOUR PROJECT
-100 words to explain what your project is about to a general audience. 
+## Data
+- Source file expected at: `archive/Payload_data_UNSW.csv` (tabular flow/payload features with binary labels).
+- Features are aggregated statistics per flow/session; no raw packet contents or personal identifiers are included.
+- Train/validation/test splits are **stratified** to preserve class balance. Intermediate splits and artifacts are stored under `staging/` for reproducibility.
 
-## DATA
-A summary of the data you’re using, remembering to include where you got it and any relevant citations. 
+## Model
+- **Primary:** LightGBM classifier (gradient‑boosted trees) chosen for strong tabular performance, speed, and native handling of non‑linear interactions.
+- **Secondary (optional):** CNN baseline for derived representations.
+- **Decision rule:** predict attack when \( \hat p \ge \tau \); **τ** is chosen to **maximize F1** on the validation set.
 
-## MODEL 
-A summary of the model you’re using and why you chose it. 
+## Hyperparameter optimisation
+- **Manual grid (parallel):** Exploratory search with `joblib.Parallel` (multi‑threaded).
+- **Bayesian optimization:** `skopt` (BayesSearchCV / ask‑tell) with checkpointing and resume.
+- Global concurrency via `N_THREADS`; models set `n_jobs=-1` when supported.
 
-## HYPERPARAMETER OPTIMSATION
-Description of which hyperparameters you have and how you chose to optimise them. 
+## Results
+After running the notebook, insert your metrics:
+- **AUPRC (test):** …
+- **F1@τ (test):** … (τ = …)
+- **Precision@τ / Recall@τ / TNR@τ:** … / … / …
 
-## RESULTS
-A summary of your results and what you can learn from your model 
+Artifacts to consult:
+- `staging/bo_lgb/manifest.json` — best LightGBM config, τ, and validation metrics.
+- `staging/manual_grid/` — grid search history.
+- `staging/cnn_best.keras` — best CNN weights (if used).
 
-You can include images of plots using the code below:
+You can include images of plots:
 ![Screenshot](image.png)
 
-## (OPTIONAL: CONTACT DETAILS)
-If you are planning on making your github repo public you may wish to include some contact information such as a link to your twitter or an email address. 
-
+## (Optional: Contact)
+Add email or LinkedIn if you plan to publish this repo.
