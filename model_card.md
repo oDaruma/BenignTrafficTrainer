@@ -4,8 +4,8 @@
 
 - **Inputs.** Tabular feature vectors **X** derived from network flows/payload statistics loaded from `archive/Payload_data_UNSW.csv`. Each row corresponds to a session/flow with numeric features and a binary label `y`.
 - **Outputs.**
-  - **Score:** Predicted probability \( \hat p = P(y=1 \mid X) \).
-  - **Class:** Decision \( \hat y = \mathbb{1}[\hat p \ge \tau] \) using a threshold **τ** selected to maximize **F1** on validation.
+  - **Score:** Predicted probability \( $\hat p = P(y=1 \mid X)$ \).
+  - **Class:** Decision \( $\hat y = \mathbb{1}[\hat p \ge \tau]$ \) using a threshold **τ** selected to maximize **F1** on validation.
 - **Model architectures.**
   - **Primary:** Gradient-boosted trees (**LightGBM** classifier) with class‑imbalance aware tuning.
   - **Alternative (optional):** CNN‑based classifier for derived representations; used as an experimental baseline.
