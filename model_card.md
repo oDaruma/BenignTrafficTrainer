@@ -13,18 +13,25 @@
 
 ## Performance
 
-**Metrics reported (validation/test):** Precision, Recall/TPR, Specificity/TNR, F1 (at **τ**), and **AUPRC** under class imbalance.  
-**Evaluation protocol:** 
-- Select **τ** on the validation split by maximizing F1. 
-- Report all metrics on the held‑out test split at the chosen **τ** and the **AUPRC** as a threshold‑free summary.
 
-> Tip: After running the notebook, you can auto-fill the numbers here from `staging/bo_lgb/manifest.json` and `staging/manual_grid/manifest.json`.
+### Champion: LightGBM_BO_Enhanced (stage: `bo_enhanced`)
+- **Dataset**: archive/Payload_data_UNSW.csv
+- **AUPRC**: 0.9999 | **F1@τ**: 0.9997 | **τ**: 0.050
+- **Seed**: 42 | **Updated**: 2025-08-29 07:41:58Z
+- **Params**:
 
-**Example field template (replace after running):**
-- AUPRC (test): `0.XXX`
-- F1@τ (test): `0.XXX` (τ = `0.XXX`)
-- Precision@τ / Recall@τ (test): `0.XXX` / `0.XXX`
-- TNR@τ (test): `0.XXX`
+```json
+{
+  "num_leaves": 118,
+  "max_depth": 12,
+  "min_child_samples": 21,
+  "subsample": 0.9012640129099659,
+  "colsample_bytree": 0.8659965652378008,
+  "learning_rate": 0.050602060132694665,
+  "reg_lambda": 0.8973465609044181
+}
+```
+
 
 ## Limitations
 
@@ -37,3 +44,4 @@
 - **Precision vs. coverage.** Increasing **τ** reduces false positives (higher precision) but may miss stealthy attacks (lower recall).
 - **Latency vs. accuracy.** Heavier feature pipelines and CNN baselines may improve accuracy but increase compute.
 - **Generalization vs. specificity.** Tuning on one subnet/application mix may overfit to that context; prefer cross‑site validation when possible.
+
