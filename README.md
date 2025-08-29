@@ -21,6 +21,26 @@ This project trains a machine‑learning model to spot suspicious network activi
 
 ## Results
 
+<img width="611" height="453" alt="image" src="https://github.com/user-attachments/assets/2d14daec-6580-4417-a6b6-5da4b081e90c" />
+
+* Strong surrogate model: The GP model quickly identified high-performing regions of the search space.
+* Over-budgeted optimization: Since performance stabilizes early, later iterations yield diminishing returns.  
+
+<img width="594" height="453" alt="image" src="https://github.com/user-attachments/assets/5abfcdf4-e1cc-4a0d-9af7-0143308934d3" />
+
+* Unstable mid-range: num_leaves between 100–160 is riskier — may lead to slight overfitting or underfitting.  
+
+<img width="576" height="453" alt="image" src="https://github.com/user-attachments/assets/6c8f3435-bd14-40dc-b846-9655dc568c09" />
+
+* Both models show extremely high precision and recall across the board.
+* The curve is almost flat at precision ≈ 1.0, even as recall increases, indicating very confident correct predictions.
+* AP ≈ 1.0 is typically unrealistic unless the test set is heavily imbalanced or easy.  
+
+| Chart             | Finding                 | Action                                                     |
+| ----------------- | ----------------------- | ---------------------------------------------------------- |
+| BO Convergence    | Fast early convergence  | Reduce `n_iter` to \~20; add early stopping                |
+| num\_leaves vs AP | Unstable middle range   | Focus search on low/high values; avoid 100–160             |
+| PR Curve          | AP ≈ 1.0 for all models | Check for data leakage, evaluate on new/test distributions |
 
 ### Champion: LightGBM_BO_Enhanced (stage: `bo_enhanced`)
 - **Dataset**: archive/Payload_data_UNSW.csv
