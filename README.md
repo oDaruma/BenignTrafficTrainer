@@ -1,9 +1,7 @@
 # Label_Trainer — Intrusion Detection Model Pipeline
 
 ## Non‑technical explanation
-This project trains a machine‑learning model to spot suspicious network activity (like lateral movement or zero‑day‑style behavior) from flow/payload statistics. We feed past examples of **benign** vs **attack** traffic to the model so it can learn patterns, then set a **decision threshold (τ)** that balances catching more true attacks with keeping false alarms low.
-
-Our model will be extended to an IDS system that identifies unknown cyber threats in network data, to detect suspicious activity on a computer network. It analyses patterns in the UNSW-NB15 dataset, distinguishing between normal (benign) traffic and attacks. By using Bayesian Optimization, we fine-tuned a LightGBM model to achieve high accuracy (PR-AUC: ~0.95), detecting most attacks while minimizing false alerts. A neural network (CNN) was also tested, but it performed slightly worse. The model’s results, visualized through charts, help security teams prioritize real threats, enhancing network safety with reliable, automated detection.
+This project trains a machine‑learning model to spot suspicious network activity (like lateral movement or zero‑day‑style behavior) from flow/payload statistics. We feed past examples of **benign** vs **attack** traffic to the model so it can learn patterns, then set a **decision threshold (τ)** that balances catching more true attacks with keeping false alarms low for SOC analysts.
 
 ## Data
 - Original dateset obtained from `UNSW-NB15 and CIC-IDS2017 Labelled PCAP Data` (https://www.kaggle.com/datasets/yasiralifarrukh/unsw-and-cicids2017-labelled-pcap-data/code/data)
@@ -23,14 +21,25 @@ Our model will be extended to an IDS system that identifies unknown cyber threat
 
 ## Results
 
-- **AUPRC (test):** 0.9997634333419292
-- **F1@τ (test):** 0.9997028988582828 (τ = 0.05)
-- **Precision@τ / Recall@τ / TNR@τ:** … / … / …
 
-Artifacts to consult:
-- `staging/bo_lgb/manifest.json` — best LightGBM config, τ, and validation metrics.
-- `staging/manual_grid/` — grid search history.
-- `staging/cnn_best.keras` — best CNN weights (if used).
+### Champion: LightGBM_BO_Enhanced (stage: `bo_enhanced`)
+- **Dataset**: archive/Payload_data_UNSW.csv
+- **AUPRC**: 0.9999 | **F1@τ**: 0.9997 | **τ**: 0.050
+- **Seed**: 42 | **Updated**: 2025-08-29 07:32:25Z
+- **Params**:
+
+```json
+{
+  "num_leaves": 118,
+  "max_depth": 12,
+  "min_child_samples": 21,
+  "subsample": 0.9012640129099659,
+  "colsample_bytree": 0.8659965652378008,
+  "learning_rate": 0.050602060132694665,
+  "reg_lambda": 0.8973465609044181
+}
+```
+
 
 ## Profile
 https://www.linkedin.com/in/maxchowhk
