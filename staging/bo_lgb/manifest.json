@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-08-29T01:33:14Z",
+  "stage": "bo_lgb",
+  "model_name": "LightGBM_BO",
+  "dataset": "archive/Payload_data_UNSW.csv",
+  "seed": 42,
+  "metrics": {
+    "AUPRC": 0.9997461675193644,
+    "F1": 0.9997283531409168,
+    "tau": 0.44999999999999996,
+    "TPR": 1.0,
+    "TNR": 0.9984761904761905
+  },
+  "best_params": {
+    "colsample_bytree": 0.8986450547106783,
+    "learning_rate": 0.014053679233748164,
+    "max_depth": 12,
+    "min_child_samples": 124,
+    "num_leaves": 236,
+    "reg_lambda": 0.0023433920577253763,
+    "subsample": 0.9299500899585347
+  }
+}

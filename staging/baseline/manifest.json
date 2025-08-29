@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-08-28T15:39:56Z",
+  "stage": "baseline",
+  "model_name": "LightGBM_Baseline",
+  "dataset": "archive/Payload_data_UNSW.csv",
+  "seed": 42,
+  "metrics": {
+    "AUPRC": 0.9997715579484534,
+    "F1": 0.9996943869061767,
+    "tau": 0.05,
+    "TPR": 0.9999320698322125,
+    "TNR": 0.9984761904761905
+  }
+}
